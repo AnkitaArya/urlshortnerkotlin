@@ -1,6 +1,6 @@
 package com.transform.urlshortner.exceptions
 
-class ErrorResponse(message: Any?, statusCode: Int) {
+class ErrorResponse {
 
     /**
      * the errorCode
@@ -13,15 +13,11 @@ class ErrorResponse(message: Any?, statusCode: Int) {
     private var message: String? = null
 
 
-    fun ErrorResponse(msg: String?, errorCode: Int) {
+    constructor(msg: String?, errorCode: Int) {
         this.errorCode = errorCode
         this.message = msg
     }
 
-    /**
-     * to instantiate error response
-     */
-    fun ErrorResponse() {}
 
     /**
      * gets the errorcode

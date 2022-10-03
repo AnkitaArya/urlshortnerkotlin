@@ -1,23 +1,15 @@
 package com.transform.urlshortner.exceptions
 
-class UrlShortnerServiceException(statusCode: Int, message: Any?) : Exception() {
-
-    /**
-     * default serialVersionUID
-     */
-    private val serialVersionUID = 1L
-
-    fun UrlShortnerServiceException() {
-    }
-
-    fun UrlShortnerServiceException(statusCode: Int, messageDetails: String?) {
-        this.statusCode = statusCode
-        this.messageDetails = messageDetails
-    }
+class UrlShortnerServiceException() : Exception() {
 
     private var statusCode = 0
 
-    private var messageDetails: String? = null
+    private var msg: String? = null
+
+    constructor(statusCode: Int, message: String?) : this() {
+        this.statusCode = statusCode
+        this.msg = message
+    }
 
     fun getStatusCode(): Int {
         return statusCode
@@ -27,12 +19,12 @@ class UrlShortnerServiceException(statusCode: Int, message: Any?) : Exception() 
         this.statusCode = statusCode
     }
 
-    fun getMessageDetails(): String? {
-        return messageDetails
+    fun getMsg(): String? {
+        return msg
     }
 
-    fun setMessageDetails(messageDetails: String?) {
-        this.messageDetails = messageDetails
+    fun setMsg(messageDetails: String?) {
+        this.msg = messageDetails
     }
 
 }

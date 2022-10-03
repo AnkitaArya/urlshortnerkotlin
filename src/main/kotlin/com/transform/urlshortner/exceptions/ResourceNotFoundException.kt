@@ -1,19 +1,19 @@
 package com.transform.urlshortner.exceptions
 
-class ResourceNotFoundException : Exception() {
 
+class ResourceNotFoundException : RuntimeException {
 
-    /** The Constant serialVersionUID.  */
-    private val serialVersionUID = 1L
+    public override lateinit var message : String
 
-    /**
-     * Instantiates a new resource not found exception.
-     *
-     * @param errorMessage
-     * the error message
-     */
-    fun ResourceNotFoundException(errorMessage: String?) {
+   constructor(message: String) {
+        this.message = message;
+    }
+    fun getmessage(): String? {
+        return message
+    }
 
+    fun setmessage(errMsg: String) {
+        this.message = errMsg
     }
 
 }

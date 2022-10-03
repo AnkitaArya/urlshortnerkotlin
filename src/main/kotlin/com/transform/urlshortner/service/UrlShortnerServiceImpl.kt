@@ -6,12 +6,13 @@ import com.transform.urlshortner.entity.UrlEntity
 import com.transform.urlshortner.exceptions.ResourceNotFoundException
 import com.transform.urlshortner.exceptions.UrlShortnerServiceException
 import com.transform.urlshortner.repository.UrlDetailsRepository
-//import org.slf4j.logger
-//import org.slf4j.loggerFactory
+import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import mu.KotlinLogging
+import kotlin.math.log
+
 private val staticLogger = KotlinLogging.logger {}
 @Service
 open class UrlShortnerServiceImpl @Autowired constructor(
@@ -45,9 +46,9 @@ open class UrlShortnerServiceImpl @Autowired constructor(
                 }
             }
             resource.setShortUrl(shortUrl)
-        } catch (serviceEx: UrlShortnerServiceException) {
-            staticLogger.error(UrlShortnerConstants.SERVICE_EXCEPTION, serviceEx)
-            throw UrlShortnerServiceException(serviceEx.getStatusCode(), serviceEx.getMessageDetails())
+        } catch (ex: Exception) {
+            staticLogger.error(UrlShortnerConstants.SERVICE_EXCEPTION, ex)
+            throw UrlShortnerServiceException(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.message)
         }
 
        staticLogger.info("{} url is shortened to {}", fullUrl, shortUrl)
@@ -61,8 +62,9 @@ open class UrlShortnerServiceImpl @Autowired constructor(
         val strBldr = StringBuilder()
         while (id > 0) {
             strBldr.insert(0, possibleChars[(id % base).toInt()])
-            id = id / base
+            id /= base
         }
+
         return strBldr.toString()
     }
     private fun save(entityCreated: UrlEntity?): UrlEntity? {
@@ -76,12 +78,13 @@ open class UrlShortnerServiceImpl @Autowired constructor(
         if (shortUrl != null) {
             //check if the url already exists in DB
             val entity: UrlEntity? = detailsRepository?.findByShortUrl(shortUrl)
-            if (entity != null && entity.getFullUrl() != null && entity.getShortUrl() != null) {
+            if (entity?.getFullUrl() != null && entity.getShortUrl() != null) {
                 fullUrl = entity.getFullUrl()
                 resource.setFullurl(fullUrl)
             } else {
                 //the URl is not available in system;
                 staticLogger.error("{} url is not found in the Db.", shortUrl)
+                throw ResourceNotFoundException(UrlShortnerConstants.SHORT_URL_NOT_FOUND);
             }
         }
         return resource
