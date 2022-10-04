@@ -11,21 +11,26 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import kotlin.math.log
+
 
 private val staticLogger = KotlinLogging.logger {}
+
 @Service
 open class UrlShortnerServiceImpl @Autowired constructor(
     private val detailsRepository: UrlDetailsRepository
-){
+) {
 
     @Transactional(rollbackFor = [Exception::class])
-     open fun shortenUrl(fullUrl: String?): UrlShortnerResource? {
+    open fun shortenUrl(fullUrl: String?): UrlShortnerResource? {
         val resource = UrlShortnerResource()
         var shortUrl: String? = null
         val domain: String = UrlShortnerConstants.DOMAIN
-        try {
-            if (fullUrl != null) {
+        //validate the url
+
+
+        if (fullUrl != null) {
+            validateUserInput(fullUrl)
+            try {
                 //check if the url already exists in DB
                 val entity: UrlEntity? = detailsRepository?.findByFullUrl(fullUrl)
                 if (entity?.getFullUrl() != null && entity.getShortUrl() != null) {
@@ -44,17 +49,19 @@ open class UrlShortnerServiceImpl @Autowired constructor(
                     //update
                     detailsRepository?.save(entityCreated)
                 }
+                resource.setShortUrl(shortUrl)
+            } catch (ex: Exception) {
+                staticLogger.error(UrlShortnerConstants.SERVICE_EXCEPTION, ex)
+                throw UrlShortnerServiceException(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.message)
             }
-            resource.setShortUrl(shortUrl)
-        } catch (ex: Exception) {
-            staticLogger.error(UrlShortnerConstants.SERVICE_EXCEPTION, ex)
-            throw UrlShortnerServiceException(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.message)
+
         }
 
-       staticLogger.info("{} url is shortened to {}", fullUrl, shortUrl)
+        staticLogger.info("{} url is shortened to {}", fullUrl, shortUrl)
         return resource
 
     }
+
     private fun encryptShortUrlId(id: Long): String? {
         var id = id
         val possibleChars: CharArray = UrlShortnerConstants.POSSIBLE_CHAR_STRING.toCharArray()
@@ -67,12 +74,13 @@ open class UrlShortnerServiceImpl @Autowired constructor(
 
         return strBldr.toString()
     }
+
     private fun save(entityCreated: UrlEntity?): UrlEntity? {
         return detailsRepository?.save(entityCreated)
     }
 
     @Transactional(rollbackFor = [Exception::class])
-     open fun getFullurl(shortUrl: String?): UrlShortnerResource? {
+    open fun getFullurl(shortUrl: String?): UrlShortnerResource? {
         val resource = UrlShortnerResource()
         var fullUrl: String? = null
         if (shortUrl != null) {
@@ -84,11 +92,16 @@ open class UrlShortnerServiceImpl @Autowired constructor(
             } else {
                 //the URl is not available in system;
                 staticLogger.error("{} url is not found in the Db.", shortUrl)
-                throw ResourceNotFoundException(UrlShortnerConstants.SHORT_URL_NOT_FOUND);
+                throw ResourceNotFoundException(UrlShortnerConstants.SHORT_URL_NOT_FOUND)
             }
         }
         return resource
     }
 
+    private fun validateUserInput(fullUrl: String) {
+        var pattern = Regex(UrlShortnerConstants.regex)
+        if (!fullUrl.matches(pattern))
+            throw UrlShortnerServiceException(HttpStatus.BAD_REQUEST.value(), UrlShortnerConstants.VALIDATION_EXCEPTION)
+    }
 
 }
