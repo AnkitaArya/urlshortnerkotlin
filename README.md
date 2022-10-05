@@ -37,6 +37,7 @@ But the scope of this application is much broader and needs to be expanded furth
 2. Infrastructure needs to be added with load balancer
 3. Deployment pipelines needs to be integrated with the application.
 4. Basic validations had been added which can be upgraded for further robustness.
+5. Testing suit needs to be integrated.
 
 #### Response :
 Response would consist below properties - 
